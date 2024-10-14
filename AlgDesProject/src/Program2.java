@@ -1,74 +1,135 @@
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Scanner;
 
-class Program2{
+class Program2 {
     public record Result(int numPlatforms, int totalHeight, int[] numPaintings) {}
-   
+
     /**
-    * Solution to program 2
-    * @param n number of paintings
-    * @param W width of the platform
-    * @param heights array of heights of the paintings
-    * @param widths array of widths of the paintings
-    * @return Result object containing the number of platforms, total height of the paintings and the number of paintings on each platform
-    */
-    private static Result program2(int n, int W, int[] heights, int[] widths) {
-        int[] numPaintings = new int[n]; // To store the number of paintings on each platform
-        int numPlatforms = 0;
-        int totalHeight = 0;
-
-        // Find the index 'k' where the height is minimal
-        int k = 0;
+     * Solution to program 2
+     * @param n number of paintings
+     * @param w width of the platform
+     * @param heights array of heights of the paintings
+     * @param widths array of widths of the paintings
+     * @return Result object containing the number of platforms, total height of the paintings and the number of paintings on each platform
+     */
+    private static Result program2(int n, int w, int[] heights, int[] widths) {
+        int minimumHeightIndex = 0;
         for (int i = 1; i < n; i++) {
-            if (heights[i] < heights[k]) {
-                k = i;
+            if (heights[i] < heights[minimumHeightIndex]) { // If it finds a height that is lower, it updates the min height
+                minimumHeightIndex = i;
             }
         }
 
-        // Process the decreasing sequence from index 0 to k-1
-        int i = 0;
-        while (i < k) {
-            int cumWidth = widths[i];
-            int tallestHeight = heights[i];
-            int paintingsOnPlatform = 1;
-            int j = i + 1;
-            while (j < k && cumWidth + widths[j] <= W) {
-                cumWidth += widths[j];
-                // tallestHeight remains heights[i] as it's decreasing
-                paintingsOnPlatform++;
-                j++;
-            }
-            totalHeight += tallestHeight;
-            numPaintings[numPlatforms++] = paintingsOnPlatform;
-            i = j;
+        ArrayList<Shelf> totalShelves = new ArrayList<>();
+
+        // First half of numbers
+        if (minimumHeightIndex > 0) {
+            totalShelves.addAll(paintingsToShelves(heights, widths, w, 0, minimumHeightIndex));
         }
 
-        // Process the minimal painting at index k
-        totalHeight += heights[k];
-        numPaintings[numPlatforms++] = 1;
-        i = k + 1;
+        // Minimum logic
+        Shelf lastShelf = totalShelves.get(totalShelves.size() - 1);
+        int minItemWidth = widths[minimumHeightIndex];
 
-        // Process the increasing sequence from index k+1 to n-1
-        while (i < n) {
-            int cumWidth = widths[i];
-            int tallestHeight = heights[i];
-            int paintingsOnPlatform = 1;
-            int j = i + 1;
-            while (j < n && cumWidth + widths[j] <= W) {
-                cumWidth += widths[j];
-                tallestHeight = heights[j]; // Update tallestHeight as heights are increasing
-                paintingsOnPlatform++;
-                j++;
+
+        // Check to see if the minHeight item fits on the prev shelf
+        if (minItemWidth + lastShelf.width <= w) {
+            lastShelf.numPaintings++;
+            lastShelf.width += minItemWidth;
+
+            if (minimumHeightIndex < n - 1) {
+                totalShelves.addAll(paintingsToShelves(heights, widths, w, minimumHeightIndex + 1, n));
             }
-            totalHeight += tallestHeight;
-            numPaintings[numPlatforms++] = paintingsOnPlatform;
-            i = j;
+        }
+        else {
+            // Find out if a single shelf is optimal
+
+            // Attempt 1: Min shelf is on its own
+            ArrayList<Shelf> attempt1 = new ArrayList<>();
+            // Add the min shelf as its own shelf
+            Shelf minShelf = new Shelf();
+            minShelf.numPaintings = 1;
+            minShelf.width = minItemWidth;
+            minShelf.tallestHeight = heights[minimumHeightIndex];
+            attempt1.add(minShelf);
+
+            if (minimumHeightIndex < n - 1) {
+                attempt1.addAll(paintingsToShelves(heights, widths, w, minimumHeightIndex + 1, n));
+            }
+
+            // Attempt 2: Min shelf gets grouped with 2nd half shelves
+            ArrayList<Shelf> attempt2 = new ArrayList<>();
+            attempt2.addAll(paintingsToShelves(heights, widths, w, minimumHeightIndex, n));
+
+            // See which solution is better
+            if (getHeight(attempt1) <= getHeight(attempt2)) {
+                totalShelves.addAll(attempt1);
+            }
+            else {
+                totalShelves.addAll(attempt2);
+            }
+
         }
 
-        // Prepare the result
+
+        int numPlatforms = totalShelves.size();
+        int totalHeight = getHeight(totalShelves);
+
         int[] numPaintingsResult = new int[numPlatforms];
-        System.arraycopy(numPaintings, 0, numPaintingsResult, 0, numPlatforms);
+        for (int i = 0; i < numPlatforms; i++)
+            numPaintingsResult[i] = totalShelves.get(i).numPaintings;
 
         return new Result(numPlatforms, totalHeight, numPaintingsResult);
+    }
+
+    public static class Shelf {
+        public int tallestHeight = 0;
+        public int numPaintings = 0;
+        public int width = 0;
+    }
+
+    // Helper method that assigns paintings to shelves and return shelves
+    private static ArrayList<Shelf> paintingsToShelves(int[] height, int[] widths, int w, int startIndex, int endIndex) {
+        ArrayList<Shelf> shelves = new ArrayList<>();
+        Shelf currentShelf = new Shelf();
+
+        for (int i = startIndex; i < endIndex; i++) {
+
+            // Is there room for another painting?
+            if (currentShelf.width + widths[i] <= w) {
+                // Add a new painting
+                currentShelf.width += widths[i];
+                currentShelf.numPaintings += 1;
+                // Update the tallest painting
+                currentShelf.tallestHeight = Math.max(currentShelf.tallestHeight, height[i]);
+            }
+            // Can't fit? New shelf
+            else {
+                // Save old shelf
+                shelves.add(currentShelf);
+                // Make a new shelf
+                currentShelf = new Shelf();
+                // Adds 1 painting to the next shelf
+                currentShelf.numPaintings += 1;
+                // Reset current width to the painting
+                currentShelf.width = widths[i];
+                // Initialize the height of the shelf
+                currentShelf.tallestHeight = height[i];
+            }
+        }
+
+        shelves.add(currentShelf);
+
+        return shelves;
+    }
+
+    private static int getHeight(ArrayList<Shelf> shelves) {
+        int height = 0;
+
+        for (Shelf shelf : shelves)
+            height += shelf.tallestHeight;
+
+        return height;
     }
 
 
