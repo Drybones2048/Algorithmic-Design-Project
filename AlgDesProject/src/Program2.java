@@ -28,12 +28,11 @@ class Program2 {
         }
 
         // Minimum logic
-        Shelf lastShelf = totalShelves.get(totalShelves.size() - 1);
         int minItemWidth = widths[minimumHeightIndex];
 
-
         // Check to see if the minHeight item fits on the prev shelf
-        if (minItemWidth + lastShelf.width <= w) {
+        if (!totalShelves.isEmpty() && minItemWidth + totalShelves.get(totalShelves.size() - 1).width <= w) {
+            Shelf lastShelf = totalShelves.get(totalShelves.size() - 1);
             lastShelf.numPaintings++;
             lastShelf.width += minItemWidth;
 
