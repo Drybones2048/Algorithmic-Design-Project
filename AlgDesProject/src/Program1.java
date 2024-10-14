@@ -30,9 +30,9 @@ class Program1{
             } else{ //if the width of the new painting is too much for the current shelf and goes over the max, we add a new shelf
 
                 //Next three lines take the process of finishing off the current shelf's details before moving onto the next one
-                totalShelves++;
-                totalHeight += maxHeight; //the max height of the new shelf is the default
-                numPaintingsOnShelf[totalShelves - 1] = paintingCount;
+                totalShelves = totalShelves + 1;
+                totalHeight = maxHeight + totalHeight; //the max height of the new shelf is the default
+                numPaintingsOnShelf[totalShelves - 1] = paintingCount; //updates the number of paintings on the new shelf 
 
                 //next three lines reset the current shelf and create a new one
                 currentWidth = widths[i];
@@ -44,13 +44,13 @@ class Program1{
         //final shelf wrap-up
         totalShelves = totalShelves + 1;
         totalHeight = totalHeight + maxHeight;
-        numPaintingsOnShelf[totalShelves - 1] = paintingCount;
+        numPaintingsOnShelf[totalShelves - 1] = paintingCount; //updates final shelf data
 
-        int[] finalShelfPaintings = new int[totalShelves];
+        int[] finalShelfPaintings = new int[totalShelves]; //creates an array representing the shelf values.
 
         int numPlatforms = totalShelves;
         
-        System.arraycopy(numPaintingsOnShelf, 0, finalShelfPaintings, 0, numPlatforms);
+        System.arraycopy(numPaintingsOnShelf, 0, finalShelfPaintings, 0, numPlatforms); //copies all of the information into one array
 
         return new Result(numPlatforms, totalHeight, finalShelfPaintings);
         
