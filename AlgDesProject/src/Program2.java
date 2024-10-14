@@ -12,44 +12,61 @@ class Program2{
     * @return Result object containing the number of platforms, total height of the paintings and the number of paintings on each platform
     */
     private static Result program2(int n, int W, int[] heights, int[] widths) {
-        int[] dp = new int[n + 1]; // dp[0] = 0
-        int[] numPaintingsOnPlatform = new int[n + 1];
-        int[] platformStarts = new int[n + 1]; // To track the start of each platform
-        dp[0] = 0;
+        int[] numPaintings = new int[n]; // To store the number of paintings on each platform
+        int numPlatforms = 0;
+        int totalHeight = 0;
 
-        for (int i = 1; i <= n; i++) {
-            dp[i] = Integer.MAX_VALUE;
-            int cumWidth = 0;
-            int tallestHeight = 0;
-            // Consider all possible platforms ending at painting i
-            for (int j = i; j >= 1; j--) {
-                cumWidth += widths[j - 1];
-                if (cumWidth > W) {
-                    break;
-                }
-                tallestHeight = Math.max(tallestHeight, heights[j - 1]);
-                if (dp[j - 1] + tallestHeight < dp[i]) {
-                    dp[i] = dp[j - 1] + tallestHeight;
-                    numPaintingsOnPlatform[i] = i - (j - 1);
-                    platformStarts[i] = j - 1;
-                }
+        // Find the index 'k' where the height is minimal
+        int k = 0;
+        for (int i = 1; i < n; i++) {
+            if (heights[i] < heights[k]) {
+                k = i;
             }
         }
 
-        // Reconstruct the number of paintings on each platform
-        List<Integer> numPaintingsList = new ArrayList<>();
-        int i = n;
-        while (i > 0) {
-            numPaintingsList.add(0, numPaintingsOnPlatform[i]);
-            i = platformStarts[i];
+        // Process the decreasing sequence from index 0 to k-1
+        int i = 0;
+        while (i < k) {
+            int cumWidth = widths[i];
+            int tallestHeight = heights[i];
+            int paintingsOnPlatform = 1;
+            int j = i + 1;
+            while (j < k && cumWidth + widths[j] <= W) {
+                cumWidth += widths[j];
+                // tallestHeight remains heights[i] as it's decreasing
+                paintingsOnPlatform++;
+                j++;
+            }
+            totalHeight += tallestHeight;
+            numPaintings[numPlatforms++] = paintingsOnPlatform;
+            i = j;
         }
 
-        int numPlatforms = numPaintingsList.size();
-        int totalHeight = dp[n];
-        int[] numPaintingsResult = new int[numPlatforms];
-        for (int k = 0; k < numPlatforms; k++) {
-            numPaintingsResult[k] = numPaintingsList.get(k);
+        // Process the minimal painting at index k
+        totalHeight += heights[k];
+        numPaintings[numPlatforms++] = 1;
+        i = k + 1;
+
+        // Process the increasing sequence from index k+1 to n-1
+        while (i < n) {
+            int cumWidth = widths[i];
+            int tallestHeight = heights[i];
+            int paintingsOnPlatform = 1;
+            int j = i + 1;
+            while (j < n && cumWidth + widths[j] <= W) {
+                cumWidth += widths[j];
+                tallestHeight = heights[j]; // Update tallestHeight as heights are increasing
+                paintingsOnPlatform++;
+                j++;
+            }
+            totalHeight += tallestHeight;
+            numPaintings[numPlatforms++] = paintingsOnPlatform;
+            i = j;
         }
+
+        // Prepare the result
+        int[] numPaintingsResult = new int[numPlatforms];
+        System.arraycopy(numPaintings, 0, numPaintingsResult, 0, numPlatforms);
 
         return new Result(numPlatforms, totalHeight, numPaintingsResult);
     }
