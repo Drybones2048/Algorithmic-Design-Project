@@ -1,3 +1,6 @@
+// Team Members: Dylan Harle & Anthony Rumore
+// Algorithm Abstraction & Design Fall 2024
+
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -12,7 +15,7 @@ class Program2 {
      * @param widths array of widths of the paintings
      * @return Result object containing the number of platforms, total height of the paintings and the number of paintings on each platform
      */
-    private static Result program2(int n, int w, int[] heights, int[] widths) {
+    public static Result program2(int n, int w, int[] heights, int[] widths) {
         int minimumHeightIndex = 0;
         for (int i = 1; i < n; i++) {
             if (heights[i] < heights[minimumHeightIndex]) { // If it finds a height that is lower, it updates the min height

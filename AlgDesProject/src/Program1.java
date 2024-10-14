@@ -1,3 +1,6 @@
+// Team Members: Dylan Harle & Anthony Rumore
+// Algorithm Abstraction & Design Fall 2024
+
 import java.util.Scanner;
 
 class Program1{
