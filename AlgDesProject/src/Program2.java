@@ -1,4 +1,4 @@
-import java.util.Scanner;
+import java.util.*;
 
 class Program2{
     public record Result(int numPlatforms, int totalHeight, int[] numPaintings) {}
@@ -6,47 +6,55 @@ class Program2{
     /**
     * Solution to program 2
     * @param n number of paintings
-    * @param w width of the platform
+    * @param W width of the platform
     * @param heights array of heights of the paintings
     * @param widths array of widths of the paintings
     * @return Result object containing the number of platforms, total height of the paintings and the number of paintings on each platform
     */
-    private static Result program2(int n, int w, int[] heights, int[] widths) {
-        int numPlatforms = 0;
-        int totalHeight = 0;
-        int currentWidth = 0;
-        int maxHeight = 0;
-        int paintingCount = 0;
-        int[] numPaintingsOnPlatform = new int[n];
+    private static Result program2(int n, int W, int[] heights, int[] widths) {
+        int[] dp = new int[n + 1]; // dp[0] = 0
+        int[] numPaintingsOnPlatform = new int[n + 1];
+        int[] platformStarts = new int[n + 1]; // To track the start of each platform
+        dp[0] = 0;
 
-        for (int i = 0; i < n; i++) {
-            if (currentWidth + widths[i] <= w) {
-                currentWidth += widths[i];
-                maxHeight = Math.max(maxHeight, heights[i]);
-                paintingCount++;
-            } else{
-                //finish current platform
-                numPlatforms++;
-                totalHeight += maxHeight;
-                numPaintingsOnPlatform[numPlatforms - 1] = paintingCount;
-
-                //start a new platform
-                currentWidth = widths[i];
-                maxHeight = heights[i];
-                paintingCount = 1;
+        for (int i = 1; i <= n; i++) {
+            dp[i] = Integer.MAX_VALUE;
+            int cumWidth = 0;
+            int tallestHeight = 0;
+            // Consider all possible platforms ending at painting i
+            for (int j = i; j >= 1; j--) {
+                cumWidth += widths[j - 1];
+                if (cumWidth > W) {
+                    break;
+                }
+                tallestHeight = Math.max(tallestHeight, heights[j - 1]);
+                if (dp[j - 1] + tallestHeight < dp[i]) {
+                    dp[i] = dp[j - 1] + tallestHeight;
+                    numPaintingsOnPlatform[i] = i - (j - 1);
+                    platformStarts[i] = j - 1;
+                }
             }
         }
-        //final platform
-        numPlatforms++;
-        totalHeight += maxHeight;
-        numPaintingsOnPlatform[numPlatforms - 1] = paintingCount;
 
-        int[] finalPlatformPaintings = new int[numPlatforms];
-        System.arraycopy(numPaintingsOnPlatform, 0, finalPlatformPaintings, 0, numPlatforms);
+        // Reconstruct the number of paintings on each platform
+        List<Integer> numPaintingsList = new ArrayList<>();
+        int i = n;
+        while (i > 0) {
+            numPaintingsList.add(0, numPaintingsOnPlatform[i]);
+            i = platformStarts[i];
+        }
 
-        // return new Result(0, 0, new int[0]);//replace with your own result
-        return new Result(numPlatforms, totalHeight, finalPlatformPaintings);
+        int numPlatforms = numPaintingsList.size();
+        int totalHeight = dp[n];
+        int[] numPaintingsResult = new int[numPlatforms];
+        for (int k = 0; k < numPlatforms; k++) {
+            numPaintingsResult[k] = numPaintingsList.get(k);
+        }
+
+        return new Result(numPlatforms, totalHeight, numPaintingsResult);
     }
+
+
     public static void main(String[] args){
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
