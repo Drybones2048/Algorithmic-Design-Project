@@ -12,41 +12,47 @@ class Program1{
     * @return Result object containing the number of platforms, total height of the paintings and the number of paintings on each platform
     */
     private static Result program1(int n, int w, int[] heights, int[] widths) {
-        int numPlatforms = 0;
-        int totalHeight = 0;
-        int currentWidth = 0;
-        int maxHeight = 0;
-        int paintingCount = 0;
-        int[] numPaintingsOnPlatform = new int[n];
+        int totalShelves = 0; //total number of shelves
+        int totalHeight = 0; //total cost of the algoritm
+        int currentWidth = 0; //width of paintings on the shelf
+        int maxHeight = 0; //max height of a shelf
+        int paintingCount = 0; //number of paintings on a shelf
+        int[] numPaintingsOnShelf = new int[n]; 
 
         for (int i = 0; i < n; i++) {
-            if(currentWidth + widths[i] <= w){ //if the width of the new painting plus the width of the current platform is still less than the max width of one platform, add it to the platform
-                currentWidth += widths[i];
+            if(currentWidth + widths[i] <= w){ //if the width of the new painting plus the width of the current shelf is still less than the max width of one shelf, add it to the shelf
+                currentWidth = currentWidth + widths[i];
+                
                 maxHeight = Math.max(maxHeight, heights[i]); //checks to see what is higher, the height of the tallest current painting or the maxHeight parameter
-                paintingCount++;
-            } else{ //if the width of the new painting is too much for the current platform and goes over the max, we add a new platform
+                
+                paintingCount = paintingCount + 1; //increases count of the number of paintings on the shelf
+                
+            } else{ //if the width of the new painting is too much for the current shelf and goes over the max, we add a new shelf
 
-                //Next three lines take the process of finishing off the current platform's details before moving onto the next one
-                numPlatforms++;
+                //Next three lines take the process of finishing off the current shelf's details before moving onto the next one
+                totalShelves++;
                 totalHeight += maxHeight; //the max height of the new shelf is the default
-                numPaintingsOnPlatform[numPlatforms - 1] = paintingCount; //STATEMENT NEEDS FURTHER ANALYSIS
+                numPaintingsOnShelf[totalShelves - 1] = paintingCount;
 
-                //Next three lines create a new platform
+                //next three lines reset the current shelf and create a new one
                 currentWidth = widths[i];
                 maxHeight = heights[i];
                 paintingCount = 1; //count is one because of the painting just added
             }
         }
 
-        //final platform wrap-up
-        numPlatforms++;
-        totalHeight += maxHeight;
-        numPaintingsOnPlatform[numPlatforms - 1] = paintingCount;
+        //final shelf wrap-up
+        totalShelves = totalShelves + 1;
+        totalHeight = totalHeight + maxHeight;
+        numPaintingsOnShelf[totalShelves - 1] = paintingCount;
 
-        int[] finalPlatformPaintings = new int[numPlatforms];
-        System.arraycopy(numPaintingsOnPlatform, 0, finalPlatformPaintings, 0, numPlatforms); //LINE NEEDS FURTHER ANALYSIS
+        int[] finalShelfPaintings = new int[totalShelves];
 
-        return new Result(numPlatforms, totalHeight, finalPlatformPaintings);
+        int numPlatforms = totalShelves;
+        
+        System.arraycopy(numPaintingsOnShelf, 0, finalShelfPaintings, 0, numPlatforms);
+
+        return new Result(numPlatforms, totalHeight, finalShelfPaintings);
         
     }
     public static void main(String[] args){
@@ -55,7 +61,7 @@ class Program1{
         int W = sc.nextInt();
         int[] heights = new int[n];
         int[] widths = new int[n];
-        for(int i=0; i<n; i++){
+        for(int i=0; i < n; i++){
             heights[i] = sc.nextInt();
         }
         for(int i=0; i<n; i++){
