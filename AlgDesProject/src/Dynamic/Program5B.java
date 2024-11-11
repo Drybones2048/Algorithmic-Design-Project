@@ -1,22 +1,9 @@
-package Dynamic;
-
 import java.util.Scanner;
 
 class Program5B {
-    public record Result(int numShelves, int totalHeight, int[] numPaintings) {}
+    public record Result(int numPlatforms, int totalHeight, int[] numPaintings) {}
 
-    // Once again, we will be implementing a helper class to store the state of the shelves and paintings
-    private static class MemoState {
-        int totalHeight;        // Optimal height for this subproblem
-        int numShelves;       // Number of shelves used
-        int lastSplit;          // Last split point for reconstruction
 
-        MemoState(int height, int shelves, int split) {
-            totalHeight = height;
-            numShelves = shelves;
-            lastSplit = split;
-        }
-    }
     /**
      * Solution to program 5B
      * @param n number of paintings
@@ -27,97 +14,85 @@ class Program5B {
     paintings and the number of paintings on each platform
      */
     private static Result program5B(int n, int w, int[] heights, int[] widths) {
-        // Create memoization table to store the results of previous runs (as learned in class)
-        MemoState[][] memo = new MemoState[n][n];
+        // Min total height for each painting index (for dynamic programming)
+        int[] dp = new int[n];
+        // How many paintings should go on each shelf data
+        int[] shelfSizes = new int[n];
 
-        // Initialize memo table for single sculpture cases
-        for (int i = 0; i < n; i++) {
-            memo[i][i] = new MemoState(heights[i], 1, i);
-        }
+        // Base case: first painting is always alone on its shelf
+        dp[0] = heights[0];
+        // First shelf must contain exactly one painting
+        shelfSizes[0] = 1;
 
-        // Fill memo table bottom-up
-        for (int len = 2; len <= n; len++) {
-            for (int start = 0; start <= n - len; start++) {
-                int end = start + len - 1;
+        // Iterate through all paintings starting from the second one (since the first is already on the shelf)
+        for (int currentPainting = 1; currentPainting < n; currentPainting++) {
+            // Set current width with the width of the current painting
+            int currentWidth = widths[currentPainting];
 
-                // Try placing all sculptures from start to end on one shelf
-                int currentWidth = 0;
-                int maxHeight = 0;
-                boolean canFitOneShelf = true;
 
-                for (int i = start; i <= end; i++) {
-                    currentWidth += widths[i];
-                    maxHeight = Math.max(maxHeight, heights[i]);
-                    if (currentWidth > w) {
-                        canFitOneShelf = false;
-                        break;
-                    }
+            // Initial solution: put current painting on new shelf above previous solution
+            dp[currentPainting] = dp[currentPainting-1] + heights[currentPainting];
+            shelfSizes[currentPainting] = 1;
+
+            // Initialize maxHeight
+            int maxHeight = heights[currentPainting];
+            int previousPainting = currentPainting - 1; // Index
+
+            // Try combining current painting with previous paintings if they fit on shelf width
+            while (previousPainting >= 0 && currentWidth + widths[previousPainting] <= w) {
+                currentWidth += widths[previousPainting]; // Update width with the prev
+                maxHeight = Math.max(maxHeight, heights[previousPainting]); // Update the max height (if the new painting is bigger)
+
+                // Get height of all shelves before current shelf configuration
+                int prevHeight;
+                if (previousPainting > 0) {
+                    prevHeight = dp[previousPainting - 1];
+                } else {
+                    prevHeight = 0;
                 }
 
-                if (canFitOneShelf) {
-                    memo[start][end] = new MemoState(maxHeight, 1, end);
-                    continue;
+
+                // Is this configuration actually better?
+                if (prevHeight + maxHeight < dp[currentPainting]) {
+                    // If so, let's make implement it
+                    // Update minimum total height
+                    dp[currentPainting] = prevHeight + maxHeight;
+                    // Store number of paintings on current shelf in this configuration
+                    shelfSizes[currentPainting] = currentPainting - previousPainting + 1;
                 }
 
-                // Since the rest of the paintings are not able to fit on one shelf, there must be a split somewhere, and we have to find the ideal place to do so
-                int minTotalHeight = 99999; // really large height constraint as default
-                int bestNumShelves = 0; // ideal number of shelves for split
-                int bestSplit = -1; // index of the best split location; -1 for none
-
-                for (int split = start; split < end; split++) {
-                    MemoState leftResult = memo[start][split];
-                    MemoState rightResult = memo[split + 1][end];
-
-                    int totalHeight = leftResult.totalHeight + rightResult.totalHeight;
-
-                    if (totalHeight < minTotalHeight) {
-                        minTotalHeight = totalHeight;
-                        bestNumShelves = leftResult.numShelves + rightResult.numShelves;
-                        bestSplit = split;
-                    }
-                }
-
-                memo[start][end] = new MemoState(minTotalHeight, bestNumShelves, bestSplit);
+                // Let's process the previous to the previous painting next
+                previousPainting--;
             }
         }
 
-        // Reconstruct solution to get paintings per shelf
-        int[] numPaintings = reconstructSolution(0, n-1, memo);
+        int totalShelves = 0;
 
-        return new Result(memo[0][n-1].numShelves, memo[0][n-1].totalHeight, numPaintings);
-    }
-
-    // Helper function to reconstruct the solution
-    private static int[] reconstructSolution(int start, int end, MemoState[][] memo) {
-        // Base case
-        if (start > end) {
-            return new int[0];
+        // Start from last painting and work backwards
+        int currentPaintingIndex = n-1;
+        while (currentPaintingIndex >= 0) {
+            totalShelves++;
+            // Go back by the number of paintings on current shelf to go shelf by shelf to the beginning
+            currentPaintingIndex -= shelfSizes[currentPaintingIndex];
         }
 
-        MemoState state = memo[start][end];
-        if (state.lastSplit == end) {
-            // All sculptures on one shelf
-            return new int[]{end - start + 1};
+        // Result will be the number of paintings on each shelf
+        int[] result = new int[totalShelves];
+
+        currentPaintingIndex = n-1; // Current painting (starting from the last)
+        int currShelfIndex = totalShelves - 1; // Current shelf (also starting at the end)
+
+        while (currentPaintingIndex >= 0) {
+            // Fill in result with the data
+            result[currShelfIndex] = shelfSizes[currentPaintingIndex];
+
+            // Move positions backwards until we reach the start
+            currentPaintingIndex -= shelfSizes[currentPaintingIndex];
+            currShelfIndex--;
         }
 
-        // recursively calls the function to reconstruct the left and right sides of the solution. leftSolution will hold the number of paintings on each shelf for the left part,
-        // and the rightSolution will hold the number of paintings on each shelf for the right part
-        int[] leftSolution = reconstructSolution(start, state.lastSplit, memo);
-        int[] rightSolution = reconstructSolution(state.lastSplit + 1, end, memo);
-
-        // we create an array that will be a return value for the function. This array will hold the shelf counts for both the left and right halves
-        int[] result = new int[leftSolution.length + rightSolution.length];
-
-        // fill result with the shelf data from the left half
-        for (int i = 0; i < leftSolution.length; i++) {
-            result[i] = leftSolution[i];
-        }
-
-        // fill result with the shelf data from the right half
-        for (int i = 0; i < rightSolution.length; i++) {
-            result[leftSolution.length + i] = rightSolution[i];
-        }
-        return result;
+        // number of shelves, total height, and paintings per shelf
+        return new Result(totalShelves, dp[n-1], result);
     }
 
     public static void main(String[] args) {
@@ -134,7 +109,7 @@ class Program5B {
         }
         sc.close();
         Result result = program5B(n, W, heights, widths);
-        System.out.println(result.numShelves);
+        System.out.println(result.numPlatforms);
         System.out.println(result.totalHeight);
         for(int i=0; i<result.numPaintings.length; i++){
             System.out.println(result.numPaintings[i]);

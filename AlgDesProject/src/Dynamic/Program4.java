@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Scanner;
 
 class Program4 {
-    public record Result(int numShelves, int totalHeight, int[] numPaintings) {}
+    public record Result(int numPlatforms, int totalHeight, int[] numPaintings) {}
    
     /**
     * Solution to program 4
@@ -135,7 +135,7 @@ class Program4 {
         }
         sc.close();
         Result result = program4(n, W, heights, widths);
-        System.out.println(result.numShelves);
+        System.out.println(result.numPlatforms);
         System.out.println(result.totalHeight);
         for(int i=0; i<result.numPaintings.length; i++){
             System.out.println(result.numPaintings[i]);
