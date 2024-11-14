@@ -1,3 +1,6 @@
+// COP4533 Milestone 2
+// Anthony Rumore, Dylan Harle
+
 import java.util.Scanner;
 
 class Program5B {

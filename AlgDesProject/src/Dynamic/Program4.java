@@ -1,7 +1,7 @@
-package Dynamic;
+// COP4533 Milestone 2
+// Anthony Rumore, Dylan Harle
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 class Program4 {
@@ -102,7 +102,7 @@ class Program4 {
         return new Result(numPaintings.length, dp[0][n-1], numPaintings);
     }
 
-    private static void countShelves(int[][] split, int start, int end, List<Integer> shelfSizes) {
+    private static void countShelves(int[][] split, int start, int end, ArrayList<Integer> shelfSizes) {
         // Base-case: if there's nothing to process, leave
         if (start > end) {
             return;

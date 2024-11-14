@@ -1,20 +1,20 @@
-package Dynamic;
+// COP4533 Milestone 2
+// Anthony Rumore, Dylan Harle
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 
 class Program3 {
     public record Result(int numPlatforms, int totalHeight, int[] numPaintings) {}
-   
+
     /**
-    * Solution to program 3
-    * @param n number of paintings
-    * @param w width of the platform
-    * @param heights array of heights of the paintings
-    * @param widths array of widths of the paintings
-    * @return Result object containing the number of platforms, total height of the paintings and the number of paintings on each platform
-    */
+     * Solution to program 3
+     * @param n number of paintings
+     * @param w width of the platform
+     * @param heights array of heights of the paintings
+     * @param widths array of widths of the paintings
+     * @return Result object containing the number of platforms, total height of the paintings and the number of paintings on each platform
+     */
     private static Result program3(int n, int w, int[] heights, int[] widths) {
         // Keep track of best solution found
         int[] optimalSolution = new int[n];
@@ -22,9 +22,9 @@ class Program3 {
         // This ArrayList keeps track of the height of each shelf and assists in further calculations
         ArrayList<Integer> currentShelfHeights = new ArrayList<>();
 
-        // Initialize with a very high number, likely bigger than any parameter.
+        // Initialize with a very high number that can handle larger inputs
         // We're using an Array of size 1 to get a pointer we can access within the recursive function calls. Java is fun
-        int[] totalHeightSolution = {99999};
+        int[] totalHeightSolution = {Integer.MAX_VALUE};
 
         // Start recursive search
         findMinHeight(0, n, w, heights, widths, 0, 0, currentShelf, currentShelfHeights, optimalSolution, totalHeightSolution);
@@ -49,6 +49,16 @@ class Program3 {
     private static void findMinHeight(int pos, int n, int w, int[] heights, int[] widths,
                                       int currentWidth, int shelfHeight, int[] currentShelf,
                                       ArrayList<Integer> shelfHeights, int[] bestSolution, int[] totalHeightSolution) {
+        // Early pruning: if current height exceeds best known solution, stop exploring this branch
+        int currentTotalHeight = 0;
+        for (Integer height : shelfHeights) {
+            currentTotalHeight += height;
+        }
+        currentTotalHeight += shelfHeight;
+        if (currentTotalHeight >= totalHeightSolution[0]) {
+            return;
+        }
+
         // Pos tracks our position recursively. It is first called with 0 and serves as a marker as we progress.
         if (pos == n) {
             // When we reach the end, include the height of the last shelf
@@ -64,7 +74,7 @@ class Program3 {
                     totalHeight += shelfHeight;
                 }
             }
-            
+
             else { // Otherwise there's nothing on other shelves
                 totalHeight = shelfHeight;
             }
@@ -72,9 +82,7 @@ class Program3 {
             // If this solution is better than the current one saved, make this the solution
             if (totalHeight < totalHeightSolution[0]) {
                 totalHeightSolution[0] = totalHeight;
-                for (int i = 0; i < n; i++) {
-                    bestSolution[i] = currentShelf[i]; // Copy each element from currentShelf to bestSolution
-                }
+                System.arraycopy(currentShelf, 0, bestSolution, 0, n);
             }
 
             return;
@@ -108,11 +116,11 @@ class Program3 {
 
         // Helps us with backtracking; cleans up unnecessary shelves
         if (shelfHeight > 0) {
-            shelfHeights.remove(shelfHeights.size() - 1);
+            if (!shelfHeights.isEmpty()) {  // Add safety check
+                shelfHeights.remove(shelfHeights.size() - 1);
+            }
         }
     }
-
-
 
     public static void main(String[] args){
         Scanner sc = new Scanner(System.in);
